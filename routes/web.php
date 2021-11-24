@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\API\RegistrationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MailController;
+use App\Http\Controllers\tryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +16,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/test',[RegistrationController::class, 'register']);
+
+
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('mails', [MailController::class, 'sendMail']);

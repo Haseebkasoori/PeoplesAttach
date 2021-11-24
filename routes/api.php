@@ -1,13 +1,11 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\API\RegistrationController;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\API\RegisterController;
+use App\Http\Middleware\EmailVarified;
+use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\API\LoginController;
-use App\Http\Controllers\API\PostController;
-use App\Http\Controllers\API\ResetPasswordController;
-use App\Http\Controllers\API\CommentController;
+use App\Http\Controllers\API\userController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,15 +17,3 @@ use App\Http\Controllers\API\CommentController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::post('register', [RegisterController::class, 'Register']);
-Route::get('emailConfirmation/{email}/{email_varified_token}', [RegisterController::class, 'VerifyEmail']);
-
-Route::middleware([VerifiedEmail::class])->group(function(){
-	Route::post('login', [LoginController::class, 'Login']);
-	Route::post('ResetPassword', [ResetPasswordController::class, 'ResetPassword']);
-});
-
-Route::middleware([JwtAuth::class])->group(function(){
-	Route::post('logout', [LoginController::class, 'Logout']);
-	Route::post('CreatePost', [PostController::class, 'CreatePost']);
-});

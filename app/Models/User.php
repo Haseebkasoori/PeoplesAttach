@@ -2,18 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Posts;
-use App\Models\Comments;
-
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,12 +18,14 @@ class User extends Authenticatable
      * @var string[]
      */
     protected $fillable = [
-        'user_name',
-        'first_name',
-        'last_name',
+        'name',
         'email',
-        'phone_number',
-        'post_count',
+        'age',
+        'gender',
+        'date_of_birth',
+        'password',
+        'verification_token',
+        'profile_image',
     ];
 
     /**
@@ -37,7 +36,6 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'deleted_at',
     ];
 
     /**
@@ -49,30 +47,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-
-    /**
-     * The Table name.
-     *
-     */
-    protected $table = 'users';
-
-
-    /**
-     * Get the Posts for the blog User.
-     */
-    public function Posts()
-    {
-        return $this->hasMany(Posts::class);
+    public function Post(){
+        return $this->hasMany(Post::class);    
     }
-
-    /**
-     * Get the comments for the blog User.
-     */
-
-    public function Comments()
-    {
-        return $this->hasMany(Comments::class);
-    }
-
-
 }
