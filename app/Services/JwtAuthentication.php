@@ -1,21 +1,19 @@
 <?php
-   
-namespace App\Http\Controllers\Api;
-   
-use App\Http\Controllers\Controller as BaseController;
-use Illuminate\Http\Request;
+
+namespace App\Services;
+
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 
-class JwtController extends BaseController 
+class JwtAuthentication
 {
     /**
      * Create Jwt Token
      *
      * @return Token
      */
-    public function createJwtToken($user_data)
+    public static function createJwtToken($user_data)
     {
         unset($user_data['email_varified_token']);
         unset($user_data['password']);
@@ -23,8 +21,7 @@ class JwtController extends BaseController
         unset($user_data['remember_token']);
         unset($user_data['created_at']);
         unset($user_data['deleted_at']);
-        
-        $secret_key="P0551BL3";
+
         $payload_info= array(
         "iss" => "localhost",
         "iat" => time(),
@@ -35,8 +32,8 @@ class JwtController extends BaseController
         );
         try {
 
-            $Auth_key = JWT::encode($payload_info,$secret_key);
-            
+            $Auth_key = JWT::encode($payload_info,config('constants.JWT_SECRET_KEY','P0551BL3'));
+
             return array('token'=>$Auth_key);
 
         } catch (\Exception $e) {
@@ -50,20 +47,12 @@ class JwtController extends BaseController
      *
      * @return Varified token or exception error
      */
-    public function varifyToken($token)
+    public static function varifyToken($token)
     {
-        $secret_key="P0551BL3";
 
-        try{
 
-            $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
+            $decoded = JWT::decode($token, new Key(config('constants.JWT_SECRET_KEY','P0551BL3'), 'HS256'));
             return $decoded;
-
-        }catch(\Exception $ex){
-            $data['error']=$ex->getMessage();
-            $data['message']="Someting went Worng";
-            return response()->error($data,404);
-        }
     }
-       
+
 }

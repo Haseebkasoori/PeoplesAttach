@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use App\Models\User;
+use App\Services\JwtAuthentication;
 
 class JwtMiddleware
 {
@@ -19,21 +20,28 @@ class JwtMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $token=request()->bearerToken();        
-        $secret_key="P0551BL3";
         try{
-            $decoded = JWT::decode($token, new Key($secret_key, 'HS256'));
-            $user_data=User::where('jwt_token',$token)->first();
-            if (!$user_data['jwt_token']) {
+            try{
+                $decoded=JwtAuthentication::varifyToken(request()->bearerToken());
+            }catch(\Exception $ex){
+                $data['error']=$ex->getMessage();
+                $data['message']="Someting went Worng with Bearer Token";
+                return response()->error($data,404);
+            }
+            $user_data=User::where('user_name',$decoded->data->user_name)->first();
+
+            // check if user data exist
+            if (!isset($user_data['jwt_token'])) {
                 $data['error']="LogOut, Please Login";
                 $data['message']="Someting went Worng";
                 return response()->error($data,404);
             }else{
+                request()->merge(['user_data'=>$user_data,'decoded_data'=>$decoded]);
                 return $next($request);
             }
         }catch(\Exception $ex){
             $data['error']=$ex->getMessage();
-            $data['message']="Someting went Worng with Bearer Token";
+            $data['message']="Someting went Worng";
             return response()->error($data,404);
         }
     }

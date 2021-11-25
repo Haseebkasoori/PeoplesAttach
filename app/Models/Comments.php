@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Posts extends Model
+class Comments extends Model
 {
     use HasFactory;
 
@@ -18,6 +18,7 @@ class Posts extends Model
         'text',
         'attachment',
         'user_id',
+        'post_id',
         'visibility',
     ];
 
@@ -35,23 +36,14 @@ class Posts extends Model
      * The Table name.
      *
      */
-    protected $table = 'posts';
+    protected $table = 'comments';
 
 
     /**
      * Get the comments for the blog User.
      */
-    public function User()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get the comments for the blog User.
-     */
-    public function Comments()
-    {
-        return $this->hasMany(Comments::class);
-    }
-
+    // public function Posts()
+    // {
+    //     return $this->hasMany('App\Resources\Post');
+    // }
 }

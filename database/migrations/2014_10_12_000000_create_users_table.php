@@ -24,7 +24,9 @@ class CreateUsersTable extends Migration
             $table->string('email_varified_token')->nullable();
             $table->longText('jwt_token')->nullable();
             $table->string('password');
-            $table->string('attachment')->nullable();
+            $table->string('profile_image')->nullable();
+            $table->string('gender')->nullable();
+            $table->date('date_of_birth');
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
