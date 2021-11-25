@@ -2,29 +2,28 @@
 
 namespace App\Jobs;
 
-use App\Mail\EmailVarification;
+use App\Mail\FriendRequestMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Mail;
 
-class EmailVarificationMailJob implements ShouldQueue
+class FriendRequestEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    public $details;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($details)
+    public function __construct($data, $email)
     {
-        $this->details = $details;
-
+        $this->data = $data;
+        $this->email = $email;
     }
 
     /**
@@ -34,7 +33,6 @@ class EmailVarificationMailJob implements ShouldQueue
      */
     public function handle()
     {
-        $email = new EmailVarification($this->details);
-        Mail::to($this->details['email'])->send($email);
+        Mail::to($this->email)->send(new FriendRequestMail($this->data));
     }
 }

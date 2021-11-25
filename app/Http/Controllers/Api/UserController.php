@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 
 use App\Http\Controllers\Controller as BaseController;
+use App\Http\Requests\AddFriendRequest;
 use App\Http\Requests\GetAllUserPostsRequest;
 use App\Http\Requests\GetUserRequest;
 use App\Http\Requests\LoginRequest;
@@ -15,6 +16,8 @@ use App\Http\Requests\UserUpdateRequest;
 use App\Http\Requests\UserSaveRequest;
 use App\Http\Resources\UserResource;
 use App\Jobs\EmailVarificationMailJob;
+use App\Jobs\FriendRequestEmailJob;
+use App\Models\FriendRequest;
 use App\Models\User;
 use App\Services\JwtAuthentication;
 use Exception;
@@ -302,8 +305,8 @@ class UserController extends BaseController
         }
 
         //Fetch all users data
-        public function GetAllUsers(Request $request)
-        {
+    public function GetAllUsers(Request $request)
+    {
         try{
             $user_data=UserResource::collection(User::all());
             if(!empty($user_data)){
@@ -321,6 +324,34 @@ class UserController extends BaseController
         catch (\Exception $e) {
             return response()->json(['error'=>$e->getMessage()], 500);
         }
+    }
+
+    // Create friend request
+    public function SendFriendRequest(AddFriendRequest $request){
+        try {
+            $friendRequest = new FriendRequest();
+            $friendRequest->sender_id = request()->user_data->id;
+            $friendRequest->reciever_id = $request->reciever_id;
+            $friendRequest->save();
+            $receiver_user = User::find($request->reciever_id);
+            // dd($receiver_user);
+            $email_data['receiver_user_name'] = $receiver_user->name;
+            $email_data['sender_user_name'] = request()->user_data->name;
+            $email_data['link']=url('friendrequest/GetAllFriendRequest/');
+            // send email
+            dispatch(new FriendRequestEmailJob($email_data, $receiver_user->email));
+
+            $data['data']= new UserResource(request()->user_data);
+            $data['message']='Friend Reqeust Sended!!';
+            return response()->success($data,200);
         }
+        catch (\Exception $e) {
+            info($e->getMessage());
+            $data['error']=null;
+            $data['message']="Someting went Worng";
+            return response()->error($data, 500);
+        }
+    }
+
 
 }

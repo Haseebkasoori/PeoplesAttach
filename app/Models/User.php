@@ -76,5 +76,29 @@ class User extends Authenticatable
         return $this->hasMany(Comments::class);
     }
 
+    /**
+     * Get the all Friend Reqeust recieve to User.
+     */
+    public function FriendRequestSended()
+    {
+        return $this->hasMany(FriendRequest::class,'sender_id','id')->where('status','Pending');
+    }
+
+    /**
+     * Get the all Friend Reqeust recieve to User.
+     */
+    public function FriendRequestRecieved()
+    {
+        return $this->hasMany(FriendRequest::class,'reciever_id','id')->where('status','Pending');
+    }
+
+    /**
+     * Get the all User Friends.
+     */
+    public function Friends()
+    {
+        return $this->Sender()->Reciever()->where('status','Approved');
+    }
+
 
 }
