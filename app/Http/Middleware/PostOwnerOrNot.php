@@ -9,7 +9,7 @@ use App\Models\Posts;
 use App\Models\User;
 use Exception;
 
-class FriendsOrNot
+class PostOwnerOrNot
 {
     /**
      * Handle an incoming request.
@@ -25,33 +25,14 @@ class FriendsOrNot
             if (isset($request->post_id)) {
                 $post=Posts::with('User','Comments')->where('id',$request->post_id)->first();
                 // chekcing if they are friends or not
-                $friends_or_not=FriendRequest::where([['sender_id',$post->user_id],['reciever_id',$user_data->id],['status','Approved']])
-                ->orwhere([['sender_id',$user_data->id],['reciever_id',$post->user_id],['status','Approved']])
-                ->first();
-
-
-                if (!empty($friends_or_not->id)) {
-                    $request->merge(['single_post_data'=>$post]);
-                    return $next($request);
-                }elseif($post->user_id==$user_data->id){
+                if ($post->user_id==$user_data->id) {
                     $request->merge(['single_post_data'=>$post]);
                     return $next($request);
                 }else{
 
-                    throw new Exception("All posts are private");
+                    throw new Exception("You are not allowed to do that");
 
                 }
-
-            }else{
-
-                $friends_or_not=FriendRequest::where([['sender_id',$request->user_id],['reciever_id',$user_data->id],['status','Approved']])
-                                        ->orwhere([['sender_id',$user_data->id],['reciever_id',$request->user_id],['status','Approved']])
-                                        ->first();
-                if(!isset($friends_or_not))
-                {
-                    throw new Exception("All posts are private");
-                }
-
                 return $next($request);
             }
 

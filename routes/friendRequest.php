@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\userController;
+use App\Http\Controllers\API\FriendRequstController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,9 +15,7 @@ use App\Http\Controllers\API\userController;
 */
 
     //MIDDLEWARE Checking Reqeust, valid or not
-// Route::middleware([JwtAuth::class])->group(function(){
-Route::group(['middleware' => ['JwtAuth', 'FriendsOrNot']], function() {
+//CREATE FRIEND REQEUST
+Route::post('SendFriendRequest', [FriendRequstController::class, 'SendFriendRequest'])->middleware(['JwtAuth','FriendReqeustSendOrNot']);
 
-    //CREATE FRIEND REQEUST
-    Route::post('SendFriendRequest', [UserController::class, 'SendFriendRequest']);
-});
+Route::put('FriendRequestUpdate', [FriendRequstController::class, 'UpdateFriendRequest'])->middleware(['JwtAuth','FriendRequetPendingOrNot']);

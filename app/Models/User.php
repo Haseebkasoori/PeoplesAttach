@@ -92,13 +92,4 @@ class User extends Authenticatable
         return $this->hasMany(FriendRequest::class,'reciever_id','id')->where('status','Pending');
     }
 
-    /**
-     * Get the all User Friends.
-     */
-    public function Friends()
-    {
-        return $this->Sender()->Reciever()->where('status','Approved');
-    }
-
-
 }

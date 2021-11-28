@@ -19,6 +19,9 @@ class UserResource extends JsonResource
             'gender' => $this->gender,
             'date_of_birth' => $this->date_of_birth,
             'phone_number' => $this->phone_number,
+            'user_profile_image_path'=>storage_path('api_data\users\\'),
+            'posts_attachment_path'=>storage_path('\api_data\posts\\'),
+            'comments_attachment_path'=>storage_path('\api_data\comments\\'),
             'posts'=> $this->when(!empty(PostResource::collection($this->Posts()->get())),PostResource::collection($this->Posts()->get()))
         ];
     }

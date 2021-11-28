@@ -25,7 +25,7 @@ use App\Http\Controllers\API\userController;
         //LOGIN
         Route::post('login', [UserController::class, 'login']);
         //FORGOT PASSWORD
-        Route::get('/forgotPassword', [ForgotPasswordController::class, 'forgotPassword']);
+        Route::get('/forgotPassword', [UserController::class, 'ResetPassword']);
     });
 
     //EMAIL VERIFY

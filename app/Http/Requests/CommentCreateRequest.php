@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CommentCreateRequest extends FormRequest
 {
@@ -26,5 +28,11 @@ class CommentCreateRequest extends FormRequest
         return [
             //
         ];
+    }
+    public function failedValidation(Validator $validator)
+    {
+        $data['error']=$validator->errors();
+        $data['message']="Someting went Worng";
+        throw new HttpResponseException(response()->error($data, 404));
     }
 }

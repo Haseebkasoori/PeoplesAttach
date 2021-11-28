@@ -52,6 +52,4 @@ class FriendRequest extends Model
     {
         return $this->belongsTo(User::class,'reciever_id','id');
     }
-
-
 }

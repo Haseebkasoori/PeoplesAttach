@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class PostCreateRequest extends FormRequest
 {
@@ -13,7 +15,7 @@ class PostCreateRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +26,16 @@ class PostCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'text' => 'string|max:255',
+            'visibility' => 'required|in:Private,Public',
+            'attachment' => 'array'
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $data['error']=$validator->errors();
+        $data['message']="Someting went Worng";
+        throw new HttpResponseException(response()->error($data, 404));
     }
 }

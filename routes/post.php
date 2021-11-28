@@ -13,18 +13,16 @@ use App\Http\Controllers\API\PostController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-    //MIDDLEWARE
-    Route::middleware([JwtAuth::class])->group(function(){
-
-    //POSTS SECTION
     //Create Post
-    Route::post('createPost', [PostController::class, 'upload']);
+    Route::post('createPost', [PostController::class, 'CreatePost'])->middleware('JwtAuth');
+
+    //MIDDLEWARE
     //Get specific Post
-    Route::get('GetPost/{id}', [PostController::class, 'GetPost']);
-    //Get All Post
-    Route::get('GetAllPost/{user_id}', [PostController::class, 'GetAllPosts']);
-    //Delete Post
-    Route::delete('delete/{id}', [PostController::class, 'DeletePost']);
-    //Update Post
-    Route::put('update', [PostController::class, 'UpdatePost']);
-});
+    Route::get('GetPost', [PostController::class, 'GetPost'])->middleware(['JwtAuth','FriendsOrNot']);
+
+    Route::middleware(['JwtAuth','PostOwnerOrNot'])->group(function(){
+        //Delete Post
+        Route::delete('delete', [PostController::class, 'DeletePost']);
+        //Update Post
+        Route::put('update', [PostController::class, 'UpdatePost']);
+    });

@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class FriendRequestMail extends Mailable
+class FriendUpateEmailJob extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -29,6 +29,6 @@ class FriendRequestMail extends Mailable
      */
     public function build()
     {
-        return $this->subject("Got a New Friend Request")->view("emails.AddFriend");
+        return $this->subject("People Attach")->view("emails.FriendUpateEmailJob");
     }
 }

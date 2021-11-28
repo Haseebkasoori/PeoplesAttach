@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class PasswordRestRequest extends FormRequest
 {
@@ -13,7 +15,7 @@ class PasswordRestRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -26,5 +28,12 @@ class PasswordRestRequest extends FormRequest
         return [
             'email' => 'required|email|exists:users|string',
         ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $data['error']=$validator->errors();
+        $data['message']="Someting went Worng";
+        throw new HttpResponseException(response()->error($data, 404));
     }
 }

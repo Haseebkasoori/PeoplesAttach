@@ -8,14 +8,17 @@ use App\Http\Requests\AddFriendRequest;
 use App\Http\Requests\GetAllUserPostsRequest;
 use App\Http\Requests\GetUserRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\PasswordRestRequest;
 use App\Http\Requests\UserDeleteRequest;
 use Illuminate\Support\Facades\Validator;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Requests\UserSaveRequest;
+use App\Http\Requests\VarifyEmailReqeust;
 use App\Http\Resources\UserResource;
 use App\Jobs\EmailVarificationMailJob;
+use App\Jobs\ForgotPasswordJob;
 use App\Jobs\FriendRequestEmailJob;
 use App\Models\FriendRequest;
 use App\Models\User;
@@ -91,24 +94,10 @@ class UserController extends BaseController
      *
      * @return \Illuminate\Http\Response
      */
-    public function verifyingEmail($email,$email_varified_token)
+    public function verifyingEmail(VarifyEmailReqeust $reqeust,$email,$email_varified_token)
     {
-        $newarray['email']=$email;
-        $newarray['email_varified_token']=$email_varified_token;
-        $validator = Validator::make($newarray, $messages=[
-            'email' => "exists:users",
-            'email_varified_token' => "exists:users",
-        ],[
-            'email_varified_token.exists'=>"Please use Correct Link, or Create Another Link",
-            'email.exists'=>"Please use correct Link",
-        ]);
+        try{
 
-        if($validator->fails()){
-            $data['error']=$validator->errors();
-            $data['message']="Someting went Worng";
-            return response()->error($data,404);
-        }else{
-            $data=$validator->validated();
             $user = User::where("email",$email)->where('email_varified_token',$email_varified_token)->first();
             $user->email_varified_token= "";
             $user->email_verified_at= date('Y-m-d h:i:s');
@@ -118,8 +107,57 @@ class UserController extends BaseController
             $data['data']=Null;
             $data['message']=$user->user_name.' Your Account Has Been Verified';
             return response()->success($data,200);
+        }catch(Exception $ex ){
+            info($ex->getMessage());
+            $response_data['error']=null;
+            $response_data['message']="Someting went Worng";
+            return response()->error($response_data, 500);
         }
     }
+/**
+     * ResetPassword api
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function ResetPassword(PasswordRestRequest $request)
+    {
+        $user = User::where('email',$request->email)->first();
+
+        // creating a new password
+        $pool = '#$%^&*0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        $password=substr(str_shuffle(str_repeat($pool, 5)), 0, 10);
+
+        // data creation for email
+        $details['password']=$password;
+        $details['user_name']=$user->user_name;
+        $details['email']=$request->email;
+
+        try{
+            //send New Password mail
+            dispatch(new ForgotPasswordJob($details));
+
+            //save data in database
+            $user->password =  Hash::make($password);
+            $update_data=$user->update();
+
+            if (!$update_data) {
+                throw new Exception('Have some problem in update password please try again later');
+            }else{
+                // data creation for response
+                $data['data']=Null;
+                $data['message']=$user->user_name.' Please check your mail  '.$user->email.' for New Password';
+                return response()->success($data,200);
+            }
+
+        }catch(\Exception $ex){
+            $data['error']=$ex->getMessage();
+            $data['message']="Someting went Worng";
+            return response()->error($data,404);
+        }
+
+    }
+
     /**
      * Login api
      *
@@ -129,36 +167,41 @@ class UserController extends BaseController
     {
         try{
             $user = User::where('email',$request->email)->first();
-            $password_check=Hash::check($user['password'], $request->password);
+            if(!empty($user)){
+                $password_check=Hash::check($user['password'], $request->password);
 
-            if (!$password_check) {
-                // Creating JWT token
-                $jwt_token=JwtAuthentication::createJwtToken($user);
+                if (!$password_check) {
+                    // Creating JWT token
+                    $jwt_token=JwtAuthentication::createJwtToken($user);
 
-                // save JWT token in DB
-                $user->jwt_token= $jwt_token['token'];
-                // try{
-                    $update=$user->update();
-                    if($update){
-                        // data creation for response
-                        $response_data['message']=strtoupper($user->user_name).' Welcome to the Application!!';
-                        $response_data['data']['token_type']="Bearer";
-                        $response_data['data']['Authenticaiton']=$jwt_token['token'];
-                        $response_data['data']['Usre_data']=new UserResource($user);
+                    // save JWT token in DB
+                    $user->jwt_token= $jwt_token['token'];
+                    try{
+                        $update=$user->update();
+                        if($update){
+                            // data creation for response
+                            $response_data['message']=strtoupper($user->user_name).' Welcome to the Application!!';
+                            $response_data['data']['token_type']="Bearer";
+                            $response_data['data']['Authenticaiton']=$jwt_token['token'];
+                            $response_data['data']['Usre_data']=new UserResource($user);
 
-                        return response()->success($response_data,200);
+                            return response()->success($response_data,200);
+                        }
+                    }catch(Exception $ex){
+                        info($ex->getMessage());
                     }
-                // }catch(Exception $ex){
-                //     info($ex->getMessage());
-                // }
+                }else{
+                    throw new Exception("Invalid Credentionl !!");
+
+                }
             }else{
-                $response_data['error']=null;
-                $response_data['message']="Someting went Worng";
-                return response()->error($response_data, 500);
+
+                throw new Exception("Invalid Credentionl !!");
+
             }
         }catch(Exception $ex){
             info($ex->getMessage());
-            $response_data['error']=null;
+            $response_data['error']=$ex->getMessage();
             $response_data['message']="Someting went Worng";
             return response()->error($response_data, 500);
         }
@@ -171,40 +214,54 @@ class UserController extends BaseController
      */
     public function UpdateUser(UserUpdateRequest $request)
     {
-        $file_name=null;
-        $data_to_update = [];
-        foreach ($request->all() as $key => $value) {
-            if (in_array($key, ['user_name', 'first_name', 'last_name', 'phone_number', 'phone_number','gender','date_of_birth'])) {
-                $data_to_update[$key]=$value;
+        try{
+            $file_name=null;
+            $data_to_update = [];
+            foreach ($request->all() as $key => $value) {
+                if (in_array($key, ['user_name', 'first_name', 'last_name', 'phone_number', 'phone_number','gender','date_of_birth'])) {
+                    $data_to_update[$key]=$value;
+                }
             }
-        }
-        // converting base64 decoded image to simple image if exist
-        if (!empty($request->profile_image)) {
-            // upload Attachment
-            $destinationPath = storage_path('api_data\users\\');
-            $data_type_aux = explode("/", $request->profile_image['mime']);
-            $attachment_type=$data_type_aux[0];
-            $attachment_extention=$data_type_aux[1];
-            $image_base64 = base64_decode($request->profile_image['data']);
-            $file_name=$request->user_name.uniqid() . '.'.$attachment_extention;
-            $file = $destinationPath . $file_name;
-            // saving in local storage
-            file_put_contents($file, $image_base64);
-            $data_to_update['profile_image']=$file_name;
-        }
+            // converting base64 decoded image to simple image if exist
+            if (!empty($request->profile_image)) {
+                // upload Attachment
+                $destinationPath = storage_path('api_data\users\\');
+                $data_type_aux = explode("/", $request->profile_image['mime']);
+                $attachment_type=$data_type_aux[0];
+                $attachment_extention=$data_type_aux[1];
+                $image_base64 = base64_decode($request->profile_image['data']);
+                $file_name=$request->user_name.uniqid() . '.'.$attachment_extention;
+                $file = $destinationPath . $file_name;
+                // saving in local storage
+                file_put_contents($file, $image_base64);
+                $data_to_update['profile_image']=$file_name;
+            }
 
-        $user = new User();
-        if(!empty($request->password)){
-            $user->password =  Hash::make($request->password);
+            $user = new User();
+            if(!empty($request->password)){
+                $user->password =  Hash::make($request->password);
+            }
+
+            $user = User::make($user);
+            if($user->update($user)){
+
+                // data creation for response
+                $data['data']=Null;
+                $data['message']=strtoupper($user->user_name).', Please check your mail ('.$user->email.') for Email Varification';
+                return response()->success($data,200);
+
+            }else{
+
+                throw new Exception("Have Problem in Updation");
+
+            }
+
+        }catch(Exception $ex ){
+            info($ex->getMessage());
+            $response_data['error']=null;
+            $response_data['message']="Someting went Worng";
+            return response()->error($response_data, 500);
         }
-
-        $user = User::make($user);
-        $user->update($user);
-
-        // data creation for response
-        $data['data']=Null;
-        $data['message']=strtoupper($user->user_name).', Please check your mail ('.$user->email.') for Email Varification';
-        return response()->success($data,200);
     }
 
 
@@ -215,19 +272,27 @@ class UserController extends BaseController
      */
     public function Logout(Request $request)
     {
-        $user=request()->user_data;
-        // remove jwt token from database
-        $user->jwt_token=Null;
-        $update_data=$user->update();
-        if (!$update_data) {
-            $data['error']="Have some Problem in Logout";
+        try{
+            $user=request()->user_data;
+            // remove jwt token from database
+            $user->jwt_token=Null;
+            $update_data=$user->update();
+            if ($update_data) {
+
+                // data creation for response
+                $data['data']=Null;
+                $data['message']='Logout Successfully';
+                return response()->success($data,200);
+
+            }else{
+                // data creation for response
+                throw new Exception("Have some Problem in Logout");
+
+            }
+        }catch(Exception $ex){
+            $data['error']=$ex->getMessage();
             $data['message']="Someting went Worng";
             return response()->error($data,404);
-        }else{
-            // data creation for response
-            $data['data']=Null;
-            $data['message']='Logout Successfully';
-            return response()->success($data,200);
         }
     }
 
@@ -270,7 +335,7 @@ class UserController extends BaseController
             $user= User::make($user->toArray());
             // data creation for response
             $data['data']= new UserResource($user);
-            $data['message']='User Deleted Successfully!!';
+            $data['message']='User data!!';
             return response()->success($data,200);
         }
         catch (\Exception $e) {
@@ -292,15 +357,17 @@ class UserController extends BaseController
                     $data['message']='User Deleted Successfully!!';
                     return response()->success($data,200);
                 }else{
-                    $data['error']="User not exist on this ID";
-                    $data['message']="Someting went Worng";
-                    return response()->error($data, 404);
+
+                    throw new Exception("User not exist on this ID");
+
                 }
             }
-            catch (\Exception $e) {
-                $data['error']=True;
+            catch (\Exception $ex) {
+
+                $data['error']=$ex->getMessage();
                 $data['message']="Someting went Worng";
                 return response()->error($data, 404);
+
             }
         }
 

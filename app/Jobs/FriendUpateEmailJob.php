@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Mail\FriendRequestMail;
+use App\Mail\FriendUpateEmailJob as MailFriendUpateEmailJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,7 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class FriendRequestEmailJob implements ShouldQueue
+class FriendUpateEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -32,6 +32,6 @@ class FriendRequestEmailJob implements ShouldQueue
      */
     public function handle()
     {
-        Mail::to($this->data['email'])->send(new FriendRequestMail($this->data));
+        Mail::to($this->data['email'])->send(new MailFriendUpateEmailJob($this->data));
     }
 }

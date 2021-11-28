@@ -30,6 +30,7 @@ class VerifiedEmail
                     $data['message']="Someting went Worng";
                     return response()->error($data,400);
                 }else{
+
                     request()->merge(['user_data'=>$user_data]);
                     return $next($request);
                 }

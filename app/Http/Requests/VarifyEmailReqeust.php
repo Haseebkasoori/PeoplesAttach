@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class PostUpdateRequest extends FormRequest
+class VarifyEmailReqeust extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -26,11 +26,8 @@ class PostUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-
-            'text' => 'string|max:255',
-            'visibility' => 'in:Private,Public',
-            'attachment' => 'array',
-            'post_id' => 'required|exists:posts,id'
+            'email' => "exists:users",
+            'email_varified_token' => "exists:users",
         ];
     }
 
