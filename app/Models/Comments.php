@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\PostResource;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,7 +20,6 @@ class Comments extends Model
         'attachment',
         'user_id',
         'post_id',
-        'visibility',
     ];
 
     /**
@@ -42,8 +42,9 @@ class Comments extends Model
     /**
      * Get the comments for the blog User.
      */
-    // public function Posts()
-    // {
-    //     return $this->hasMany('App\Resources\Post');
-    // }
+    public function Post()
+    {
+        return $this->hasOne(PostResource::class);
+    }
+
 }

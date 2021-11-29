@@ -26,7 +26,9 @@ class CommentCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            "post_id"=>'exists:posts,id',
+            'text' => 'string|max:255',
+            'attachment' => 'array'
         ];
     }
     public function failedValidation(Validator $validator)

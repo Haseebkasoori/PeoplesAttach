@@ -13,17 +13,17 @@ use App\Http\Controllers\API\CommentController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+
+
     //MIDDLEWARE
     Route::middleware([JwtAuth::class])->group(function(){
     //COMMENT SECTION
+
     //Creat Comment
-    Route::post('comments', [CommentController::class, 'comment']);
-    //Get specific Comment
-    Route::get('ShowComment/{id}', [CommentController::class, 'GetComment']);
-    //Get All Comments
-    Route::get('GetAllComment', [CommentController::class, 'GetAllComment']);
+    Route::post('CreateComment', [CommentController::class, 'CreateComment']);
     //Delete Comment
-    Route::delete('DeleteComment/{id}', [CommentController::class, 'DeleteComment']);
+    Route::delete('DeleteComment/{id}', [CommentController::class, 'DeleteComment'])->middleware('CommentOwnerOrNot::class');
     //Update Comment
-    Route::put('updateComment', [CommentController::class, 'updateComment']);
+    Route::put('updateComment', [CommentController::class, 'updateComment'])->middleware('CommentOwnerOrNot::class');
 });

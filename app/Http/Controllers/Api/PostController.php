@@ -30,27 +30,28 @@ class PostController extends BaseController
     {
         try{
         // converting base64 decoded image to simple image
-        $file_name=null;
-            if (!empty($request->attachment)) {
-
-                // upload Attachment
-                $destinationPath = storage_path('api_data\posts\\');
-                $data_type_aux = explode("/", $request->attachment['mime']);
-                $attachment_type=$data_type_aux[0];
-                $attachment_extention=$data_type_aux[1];
-                $image_base64 = base64_decode($request->attachment['data']);
-                $file_name=$request->user_name.uniqid() . '.'.$attachment_extention;
-                $file = $destinationPath . $file_name;
-                // saving in local storage
-                file_put_contents($file, $image_base64);
-            }
-            // dd($request->user_data->id);
-            $post = new Posts();
             if (empty($request->text)and empty($request->attachment)) {
                 throw new Exception('Please write some text or upload any file for creating post');
+                // dd($request->user_data->id);
             }else{
+                $file_name=null;
+                if (!empty($request->attachment)) {
+
+                    // upload Attachment
+                    $destinationPath = storage_path('api_data\posts\\');
+                    $data_type_aux = explode("/", $request->attachment['mime']);
+                    $attachment_type=$data_type_aux[0];
+                    $attachment_extention=$data_type_aux[1];
+                    $image_base64 = base64_decode($request->attachment['data']);
+                    $file_name=$request->user_name.uniqid() . '.'.$attachment_extention;
+                    $file = $destinationPath . $file_name;
+                    // saving in local storage
+                    file_put_contents($file, $image_base64);
+                }
+
+                $post = new Posts();
                 $post->text=$request->text;
-                $post->user_id=$request->user_data->id;
+                $post->User()->associate($request->user_data->id);
                 $post->visibility=$request->visibility;
                 $post->attachment=$file_name;
                 if ($post->save()) {
@@ -104,12 +105,14 @@ class PostController extends BaseController
                 }
             }
             if (!empty($request->attachment)) {
+
                 // upload Attachment
-                $destinationPath = storage_path('\app\public\post\\');
-                $input_type_aux = explode("/", $request->attachment['mime']);
-                $attachment_extention=$input_type_aux[1];
+                $destinationPath = storage_path('api_data\posts\\');
+                $data_type_aux = explode("/", $request->attachment['mime']);
+                $attachment_type=$data_type_aux[0];
+                $attachment_extention=$data_type_aux[1];
                 $image_base64 = base64_decode($request->attachment['data']);
-                $file_name=uniqid() . '.'.$attachment_extention;
+                $file_name=$request->user_name.uniqid() . '.'.$attachment_extention;
                 $file = $destinationPath . $file_name;
                 // saving in local storage
                 file_put_contents($file, $image_base64);

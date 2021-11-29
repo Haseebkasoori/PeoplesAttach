@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\PostResource;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -64,7 +65,7 @@ class User extends Authenticatable
      */
     public function Posts()
     {
-        return $this->hasMany(Posts::class);
+        return $this->hasMany(PostResource::class);
     }
 
     /**
