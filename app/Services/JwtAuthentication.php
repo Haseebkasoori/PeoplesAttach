@@ -22,7 +22,6 @@ class JwtAuthentication
         unset($user_data['created_at']);
         unset($user_data['deleted_at']);
 
-        $secret_key="";
         $payload_info= array(
         "iss" => "localhost",
         "iat" => time(),

@@ -28,7 +28,7 @@ class DatabaseConnection {
      */
 
 
-    public static function getConnection(){
+    public function getConnection(){
         return $this->connection;
     }
 
